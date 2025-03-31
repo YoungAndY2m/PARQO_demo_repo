@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "Hint-QPT"
+version = "1.2023.0"
+authors = ["Duke Database Group: Haibo Xiu, Yang Li, Ethan Yang, Weihang Guo"]
+description = "Hint-QPT: Demo for PARQO"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+flask = "2.3.3"
+werkzeug = "2.3.7"
+flask-sqlalchemy = "^3.0.5"
+flask-wtf = "^1.1.1"
+psycopg2-binary = "^2.9.7"
+flask-login = "^0.6.2"
+email-validator = "^2.0.0.post2"
+faker = "^19.3.1"
+python-dotenv = "^1.0.0"
+humanize = "^4.8.0"
+sqlvis = "^0.1.0"
+ipython = "^8.24.0"
+pandas = "^2.2.2"
+numpy = "^1.26.4"
+matplotlib = "^3.9.0"
+scikit-learn = "^1.5.0"
+bokeh = "^3.4.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

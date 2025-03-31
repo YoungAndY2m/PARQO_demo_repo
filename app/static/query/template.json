@@ -1,0 +1,170 @@
+{
+    "queries": [
+      {
+        "query_id": "1a",
+        "sql_template": "SELECT MIN(mc.note) AS production_note,\n MIN(t.title) AS movie_title,\n MIN(t.production_year) AS movie_year\n FROM company_type AS ct,\n info_type AS it,\n movie_companies AS mc,\n movie_info_idx AS mi_idx,\n title AS t\n WHERE P0\n AND it.info = 'P1'\n AND P2\n AND ct.id = mc.company_type_id\n AND t.id = mc.movie_id\n AND t.id = mi_idx.movie_id\n AND mc.movie_id = mi_idx.movie_id\n AND it.id = mi_idx.info_type_id;",
+        "placeholders": ["P0", "P1", "P2"]
+      },
+      {
+        "query_id": "2a",
+        "sql_template": "SELECT MIN(t.title) AS movie_title\n FROM company_name AS cn,\n keyword AS k,\n movie_companies AS mc,\n movie_keyword AS mk,\n title AS t\n WHERE P0\n AND P1\n AND cn.id = mc.company_id\n AND mc.movie_id = t.id\n AND t.id = mk.movie_id\n AND mk.keyword_id = k.id\n AND mc.movie_id = mk.movie_id;",
+        "placeholders": ["P0", "P1"]
+      },
+      {
+        "query_id": "3a",
+        "sql_template": "SELECT MIN(t.title) AS movie_title\nFROM keyword AS k,\nmovie_info AS mi,\nmovie_keyword AS mk,\ntitle AS t\nWHERE P0\nAND P1\nAND P2\nAND t.id = mi.movie_id\nAND t.id = mk.movie_id\nAND mk.movie_id = mi.movie_id\nAND k.id = mk.keyword_id;",
+        "placeholders": ["P0", "P1", "P2"]
+      },
+      {
+          "query_id": "4a",
+          "sql_template": "SELECT MIN(mi_idx.info) AS rating,\nMIN(t.title) AS movie_title\nFROM info_type AS it,\nkeyword AS k,\nmovie_info_idx AS mi_idx,\nmovie_keyword AS mk,\ntitle AS t\nWHERE it.info = 'P0'\nAND P1\nAND P2\nAND P3\nAND t.id = mi_idx.movie_id\nAND t.id = mk.movie_id\nAND mk.movie_id = mi_idx.movie_id\nAND k.id = mk.keyword_id\nAND it.id = mi_idx.info_type_id;",
+          "placeholders": ["P0", "P1", "P2", "P3"]
+      },
+      {
+          "query_id": "5a",
+          "sql_template": "SELECT MIN(t.title) AS typical_european_movie\nFROM company_type AS ct,\ninfo_type AS it,\nmovie_companies AS mc,\nmovie_info AS mi,\ntitle AS t\nWHERE P0\nAND P1\nAND P2\nAND P3\nAND t.id = mi.movie_id\nAND t.id = mc.movie_id\nAND mc.movie_id = mi.movie_id\nAND ct.id = mc.company_type_id\nAND it.id = mi.info_type_id;",
+          "placeholders": ["P0", "P1", "P2", "P3"]
+      },
+      {
+          "query_id": "6a",
+          "sql_template": "SELECT MIN(k.keyword) AS movie_keyword,\nMIN(n.name) AS actor_name,\nMIN(t.title) AS marvel_movie\nFROM cast_info AS ci,\nkeyword AS k,\nmovie_keyword AS mk,\nname AS n,\ntitle AS t\nWHERE P0\nAND P1\nAND P2\nAND k.id = mk.keyword_id\nAND t.id = mk.movie_id\nAND t.id = ci.movie_id\nAND ci.movie_id = mk.movie_id\nAND n.id = ci.person_id;",
+          "placeholders": ["P0", "P1", "P2"]
+      },
+      {
+          "query_id": "7a",
+          "sql_template": "SELECT MIN(n.name) AS of_person,\nMIN(t.title) AS biography_movie\nFROM aka_name AS an,\ncast_info AS ci,\ninfo_type AS it,\nlink_type AS lt,\nmovie_link AS ml,\nname AS n,\nperson_info AS pi,\ntitle AS t\nWHERE P0\nAND it.info = 'P1'\nAND P2\nAND P3\nAND P4\nAND P5\nAND n.id = an.person_id\nAND n.id = pi.person_id\nAND ci.person_id = n.id\nAND t.id = ci.movie_id\nAND ml.linked_movie_id = t.id\nAND lt.id = ml.link_type_id\nAND it.id = pi.info_type_id\nAND pi.person_id = an.person_id\nAND pi.person_id = ci.person_id\nAND an.person_id = ci.person_id\nAND ci.movie_id = ml.linked_movie_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5"]
+      },
+      {
+        "query_id": "8a",
+        "sql_template": "SELECT MIN(an1.name) AS actress_pseudonym,\n MIN(t.title) AS japanese_movie_dubbed\nFROM aka_name AS an1,\n cast_info AS ci,\n company_name AS cn,\n movie_companies AS mc,\n name AS n,\n role_type AS rt,\n title AS t\nWHERE P0\n AND P1\n AND P2\n AND P3\n AND P4\n AND an1.person_id = n.id\n AND n.id = ci.person_id\n AND ci.movie_id = t.id\n AND t.id = mc.movie_id\n AND mc.company_id = cn.id\n AND ci.role_id = rt.id\n AND an1.person_id = ci.person_id\n AND ci.movie_id = mc.movie_id;",
+        "placeholders": ["P0", "P1", "P2", "P3", "P4"]
+      },
+      {
+          "query_id": "9a",
+          "sql_template": "SELECT MIN(an.name) AS alternative_name,\n MIN(chn.name) AS character_name,\n MIN(t.title) AS movie\nFROM aka_name AS an,\n char_name AS chn,\n cast_info AS ci,\n company_name AS cn,\n movie_companies AS mc,\n name AS n,\n role_type AS rt,\n title AS t\nWHERE P0\n AND P1\n AND P2\n AND P3\n AND P4\n AND P5\n AND ci.movie_id = t.id\n AND t.id = mc.movie_id\n AND ci.movie_id = mc.movie_id\n AND mc.company_id = cn.id\n AND ci.role_id = rt.id\n AND n.id = ci.person_id\n AND chn.id = ci.person_role_id\n AND an.person_id = n.id\n AND an.person_id = ci.person_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5"]
+      },
+      {
+          "query_id": "10a",
+          "sql_template": "SELECT MIN(chn.name) AS uncredited_voiced_character,\n MIN(t.title) AS russian_movie\nFROM char_name AS chn,\n cast_info AS ci,\n company_name AS cn,\n company_type AS ct,\n movie_companies AS mc,\n role_type AS rt,\n title AS t\nWHERE P0\n AND P1\n AND P2\n AND P3\n AND t.id = mc.movie_id\n AND t.id = ci.movie_id\n AND ci.movie_id = mc.movie_id\n AND chn.id = ci.person_role_id\n AND rt.id = ci.role_id\n AND cn.id = mc.company_id\n AND ct.id = mc.company_type_id;",
+          "placeholders": ["P0", "P1", "P2", "P3"]
+      },
+      {
+          "query_id": "11a",
+          "sql_template": "SELECT MIN(cn.name) AS from_company,\n MIN(lt.link) AS movie_link_type,\n MIN(t.title) AS non_polish_sequel_movie\nFROM company_name AS cn,\n company_type AS ct,\n keyword AS k,\n link_type AS lt,\n movie_companies AS mc,\n movie_keyword AS mk,\n movie_link AS ml,\n title AS t\nWHERE P0\n AND P1\n AND P2\n AND P3\n AND P4\n AND P5\n AND lt.id = ml.link_type_id\n AND ml.movie_id = t.id\n AND t.id = mk.movie_id\n AND mk.keyword_id = k.id\n AND t.id = mc.movie_id\n AND mc.company_type_id = ct.id\n AND mc.company_id = cn.id\n AND ml.movie_id = mk.movie_id\n AND ml.movie_id = mc.movie_id\n AND mk.movie_id = mc.movie_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5"]
+      },
+      {
+          "query_id": "12a",
+          "sql_template": "SELECT MIN(cn.name) AS movie_company,\n MIN(mi_idx.info) AS rating,\n MIN(t.title) AS drama_horror_movie\nFROM company_name AS cn,\n company_type AS ct,\n info_type AS it1,\n info_type AS it2,\n movie_companies AS mc,\n movie_info AS mi,\n movie_info_idx AS mi_idx,\n title AS t\nWHERE P0\n AND P1\n AND it1.info = 'P2'\n AND it2.info = 'rating'\n AND P4\n AND P5\n AND P6\n AND t.id = mi.movie_id\n AND t.id = mi_idx.movie_id\n AND mi.info_type_id = it1.id\n AND mi_idx.info_type_id = it2.id\n AND t.id = mc.movie_id\n AND ct.id = mc.company_type_id\n AND cn.id = mc.company_id\n AND mc.movie_id = mi.movie_id\n AND mc.movie_id = mi_idx.movie_id\n AND mi.movie_id = mi_idx.movie_id;",
+          "placeholders": ["P0", "P1", "P2", "P4", "P5", "P6"]
+      },
+      {
+        "query_id": "13a",
+        "sql_template": "SELECT MIN(mi.info) AS release_date,\n   MIN(miidx.info) AS rating,\n   MIN(t.title) AS german_movie\nFROM company_name AS cn,\n   company_type AS ct,\n   info_type AS it,\n   info_type AS it2,\n   kind_type AS kt,\n   movie_companies AS mc,\n   movie_info AS mi,\n   movie_info_idx AS miidx,\n   title AS t\nWHERE P0\nAND P1\nAND it.info = 'rating'\nAND it2.info = 'P2'\nAND P3\nAND mi.movie_id = t.id\nAND it2.id = mi.info_type_id\nAND kt.id = t.kind_id\nAND mc.movie_id = t.id\nAND cn.id = mc.company_id\nAND ct.id = mc.company_type_id\nAND miidx.movie_id = t.id\nAND it.id = miidx.info_type_id\nAND mi.movie_id = miidx.movie_id\nAND mi.movie_id = mc.movie_id\nAND miidx.movie_id = mc.movie_id;",
+        "placeholders": ["P0", "P1", "P2", "P3"]
+      },
+      {
+          "query_id": "14a",
+          "sql_template": "SELECT MIN(mi_idx.info) AS rating,\n   MIN(t.title) AS northern_dark_movie\nFROM info_type AS it1,\n   info_type AS it2,\n   keyword AS k,\n   kind_type AS kt,\n   movie_info AS mi,\n   movie_info_idx AS mi_idx,\n   movie_keyword AS mk,\n   title AS t\nWHERE it1.info = 'P0'\nAND it2.info = 'P1'\nAND P2\nAND P3\nAND P4\nAND P5\nAND P6\nAND kt.id = t.kind_id\nAND t.id = mi.movie_id\nAND t.id = mk.movie_id\nAND t.id = mi_idx.movie_id\nAND mk.movie_id = mi.movie_id\nAND mk.movie_id = mi_idx.movie_id\nAND mi.movie_id = mi_idx.movie_id\nAND k.id = mk.keyword_id\nAND it1.id = mi.info_type_id\nAND it2.id = mi_idx.info_type_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5", "P6"]
+      },
+      {
+          "query_id": "15a",
+          "sql_template": "SELECT MIN(mi.info) AS release_date,\n   MIN(t.title) AS internet_movie\nFROM aka_title AS aka_t,\n   company_name AS cn,\n   company_type AS ct,\n   info_type AS it1,\n   keyword AS k,\n   movie_companies AS mc,\n   movie_info AS mi,\n   movie_keyword AS mk,\n   title AS t\nWHERE P0\nAND it1.info = 'P1'\nAND P2\nAND P3\nAND P4\nAND t.id = aka_t.movie_id\nAND t.id = mi.movie_id\nAND t.id = mk.movie_id\nAND t.id = mc.movie_id\nAND mk.movie_id = mi.movie_id\nAND mk.movie_id = mc.movie_id\nAND mk.movie_id = aka_t.movie_id\nAND mi.movie_id = mc.movie_id\nAND mi.movie_id = aka_t.movie_id\nAND mc.movie_id = aka_t.movie_id\nAND k.id = mk.keyword_id\nAND it1.id = mi.info_type_id\nAND cn.id = mc.company_id\nAND ct.id = mc.company_type_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4"]
+      },
+      {
+          "query_id": "16a",
+          "sql_template": "SELECT MIN(an.name) AS cool_actor_pseudonym,\n   MIN(t.title) AS series_named_after_char\nFROM aka_name AS an,\n   cast_info AS ci,\n   company_name AS cn,\n   keyword AS k,\n   movie_companies AS mc,\n   movie_keyword AS mk,\n   name AS n,\n   title AS t\nWHERE P0\nAND P1\nAND P2\nAND an.person_id = n.id\nAND n.id = ci.person_id\nAND ci.movie_id = t.id\nAND t.id = mk.movie_id\nAND mk.keyword_id = k.id\nAND t.id = mc.movie_id\nAND mc.company_id = cn.id\nAND an.person_id = ci.person_id\nAND ci.movie_id = mc.movie_id\nAND ci.movie_id = mk.movie_id\nAND mc.movie_id = mk.movie_id;",
+          "placeholders": ["P0", "P1", "P2"]
+      },
+      {
+          "query_id": "17a",
+          "sql_template": "SELECT MIN(n.name) AS member_in_charnamed_american_movie,\n   MIN(n.name) AS a1\nFROM cast_info AS ci,\n   company_name AS cn,\n   keyword AS k,\n   movie_companies AS mc,\n   movie_keyword AS mk,\n   name AS n,\n   title AS t\nWHERE P0\nAND P1\nAND P2\nAND n.id = ci.person_id\nAND ci.movie_id = t.id\nAND t.id = mk.movie_id\nAND mk.keyword_id = k.id\nAND t.id = mc.movie_id\nAND mc.company_id = cn.id\nAND ci.movie_id = mc.movie_id\nAND ci.movie_id = mk.movie_id\nAND mc.movie_id = mk.movie_id;",
+          "placeholders": ["P0", "P1", "P2"]
+      },
+      {
+          "query_id": "18a",
+          "sql_template": "SELECT MIN(mi.info) AS movie_budget,\n   MIN(mi_idx.info) AS movie_votes,\n   MIN(t.title) AS movie_title\nFROM cast_info AS ci,\n   info_type AS it1,\n   info_type AS it2,\n   movie_info AS mi,\n   movie_info_idx AS mi_idx,\n   name AS n,\n   title AS t\nWHERE P0\nAND it1.info = 'P1'\nAND it2.info = 'P2'\nAND P3\nAND t.id = mi.movie_id\nAND t.id = mi_idx.movie_id\nAND t.id = ci.movie_id\nAND ci.movie_id = mi.movie_id\nAND ci.movie_id = mi_idx.movie_id\nAND mi.movie_id = mi_idx.movie_id\nAND n.id = ci.person_id\nAND it1.id = mi.info_type_id\nAND it2.id = mi_idx.info_type_id;",
+          "placeholders": ["P0", "P1", "P2", "P3"]
+      },
+      {
+        "query_id": "19a",
+        "sql_template": "SELECT MIN(n.name) AS voicing_actress,\n   MIN(t.title) AS voiced_movie\nFROM aka_name AS an,\n   char_name AS chn,\n   cast_info AS ci,\n   company_name AS cn,\n   movie_companies AS mc,\n   movie_info AS mi,\n   name AS n,\n   role_type AS rt,\n   title AS t\nWHERE P0\nAND P1\nAND it.info = 'P2'\nAND P3\nAND P4\nAND P5\nAND P6\nAND P7\nAND t.id = mi.movie_id\nAND t.id = mc.movie_id\nAND t.id = ci.movie_id\nAND mc.movie_id = ci.movie_id\nAND mc.movie_id = mi.movie_id\nAND mi.movie_id = ci.movie_id\nAND cn.id = mc.company_id\nAND it.id = mi.info_type_id\nAND n.id = ci.person_id\nAND rt.id = ci.role_id\nAND n.id = an.person_id\nAND ci.person_id = an.person_id\nAND chn.id = ci.person_role_id;",
+        "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"]
+      },
+      {
+          "query_id": "20a",
+          "sql_template": "SELECT MIN(t.title) AS complete_downey_ironman_movie\nFROM complete_cast AS cc,\n   comp_cast_type AS cct1,\n   comp_cast_type AS cct2,\n   char_name AS chn,\n   cast_info AS ci,\n   keyword AS k,\n   kind_type AS kt,\n   movie_keyword AS mk,\n   name AS n,\n   title AS t\nWHERE cct1.kind = 'cast'\nAND cct2.kind LIKE '%complete%'\nAND P0\nAND P1\nAND P2\nAND P3\nAND kt.id = t.kind_id\nAND t.id = mk.movie_id\nAND t.id = ci.movie_id\nAND t.id = cc.movie_id\nAND mk.movie_id = ci.movie_id\nAND mk.movie_id = cc.movie_id\nAND ci.movie_id = cc.movie_id\nAND chn.id = ci.person_role_id\nAND n.id = ci.person_id\nAND k.id = mk.keyword_id\nAND cct1.id = cc.subject_id\nAND cct2.id = cc.status_id;",
+          "placeholders": ["P0", "P1", "P2", "P3"]
+      },
+      {
+          "query_id": "21a",
+          "sql_template": "SELECT MIN(cn.name) AS company_name,\n   MIN(lt.link) AS link_type,\n   MIN(t.title) AS western_follow_up\nFROM company_name AS cn,\n   company_type AS ct,\n   keyword AS k,\n   link_type AS lt,\n   movie_companies AS mc,\n   movie_info AS mi,\n   movie_keyword AS mk,\n   movie_link AS ml,\n   title AS t\nWHERE P0\nAND P1\nAND P2\nAND P3\nAND P4\nAND P5\nAND P6\nAND lt.id = ml.link_type_id\nAND ml.movie_id = t.id\nAND t.id = mk.movie_id\nAND mk.keyword_id = k.id\nAND t.id = mc.movie_id\nAND mc.company_type_id = ct.id\nAND mc.company_id = cn.id\nAND mi.movie_id = t.id\nAND ml.movie_id = mk.movie_id\nAND ml.movie_id = mc.movie_id\nAND mk.movie_id = mc.movie_id\nAND ml.movie_id = mi.movie_id\nAND mk.movie_id = mi.movie_id\nAND mc.movie_id = mi.movie_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5", "P6"]
+      },
+      {
+          "query_id": "22a",
+          "sql_template": "SELECT MIN(cn.name) AS movie_company,\n   MIN(mi_idx.info) AS rating,\n   MIN(t.title) AS western_violent_movie\nFROM company_name AS cn,\n   company_type AS ct,\n   info_type AS it1,\n   info_type AS it2,\n   keyword AS k,\n   kind_type AS kt,\n   movie_companies AS mc,\n   movie_info AS mi,\n   movie_info_idx AS mi_idx,\n   movie_keyword AS mk,\n   title AS t\nWHERE P0\nAND it1.info = 'P1'\nAND it2.info = 'P2'\nAND P3\nAND P4\nAND P5\nAND P6\nAND P7\nAND P8\nAND kt.id = t.kind_id\nAND t.id = mi.movie_id\nAND t.id = mk.movie_id\nAND t.id = mi_idx.movie_id\nAND t.id = mc.movie_id\nAND mk.movie_id = mi.movie_id\nAND mk.movie_id = mi_idx.movie_id\nAND mk.movie_id = mc.movie_id\nAND mi.movie_id = mi_idx.movie_id\nAND mi.movie_id = mc.movie_id\nAND mc.movie_id = mi_idx.movie_id\nAND k.id = mk.keyword_id\nAND it1.id = mi.info_type_id\nAND it2.id = mi_idx.info_type_id\nAND ct.id = mc.company_type_id\nAND cn.id = mc.company_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8"]
+      },
+      {
+          "query_id": "23a",
+          "sql_template": "SELECT MIN(kt.kind) AS movie_kind,\n   MIN(t.title) AS complete_us_internet_movie\nFROM complete_cast AS cc,\n   comp_cast_type AS cct,\n   company_name AS cn,\n   company_type AS ct,\n   info_type AS it1,\n   keyword AS k,\n   kind_type AS kt,\n   movie_companies AS mc,\n   movie_info AS mi,\n   movie_keyword AS mk,\n   title AS t\nWHERE P0\nAND P1\nAND it1.info = 'P2'\nAND P3\nAND P4\nAND P5\nAND kt.id = t.kind_id\nAND t.id = mi.movie_id\nAND t.id = mk.movie_id\nAND t.id = mc.movie_id\nAND t.id = cc.movie_id\nAND mk.movie_id = mi.movie_id\nAND mk.movie_id = mc.movie_id\nAND mk.movie_id = cc.movie_id\nAND mi.movie_id = mc.movie_id\nAND mi.movie_id = cc.movie_id\nAND mc.movie_id = cc.movie_id\nAND k.id = mk.keyword_id\nAND it1.id = mi.info_type_id\nAND cn.id = mc.company_id\nAND ct.id = mc.company_type_id\nAND cct.id = cc.status_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5"]
+      },
+      {
+        "query_id": "24a",
+        "sql_template": "SELECT MIN(chn.name) AS voiced_char_name,\n   MIN(n.name) AS voicing_actress_name,\n   MIN(t.title) AS voiced_action_movie_jap_eng\nFROM aka_name AS an,\n   char_name AS chn,\n   cast_info AS ci,\n   company_name AS cn,\n   info_type AS it,\n   keyword AS k,\n   movie_companies AS mc,\n   movie_info AS mi,\n   movie_keyword AS mk,\n   name AS n,\n   role_type AS rt,\n   title AS t\nWHERE P0\nAND P1\nAND it.info = 'P2'\nAND P3\nAND P4\nAND P5\nAND P6\nAND P7\nAND t.id = mi.movie_id\nAND t.id = mc.movie_id\nAND t.id = ci.movie_id\nAND t.id = mk.movie_id\nAND mc.movie_id = ci.movie_id\nAND mc.movie_id = mi.movie_id\nAND mc.movie_id = mk.movie_id\nAND mi.movie_id = ci.movie_id\nAND mi.movie_id = mk.movie_id\nAND ci.movie_id = mk.movie_id\nAND cn.id = mc.company_id\nAND it.id = mi.info_type_id\nAND n.id = ci.person_id\nAND rt.id = ci.role_id\nAND n.id = an.person_id\nAND ci.person_id = an.person_id\nAND chn.id = ci.person_role_id\nAND k.id = mk.keyword_id;",
+        "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"]
+      },
+      {
+          "query_id": "25a",
+          "sql_template": "SELECT MIN(mi.info) AS movie_budget,\n   MIN(mi_idx.info) AS movie_votes,\n   MIN(n.name) AS male_writer,\n   MIN(t.title) AS violent_movie_title\nFROM cast_info AS ci,\n   info_type AS it1,\n   info_type AS it2,\n   keyword AS k,\n   movie_info AS mi,\n   movie_info_idx AS mi_idx,\n   movie_keyword AS mk,\n   name AS n,\n   title AS t\nWHERE P0\nAND it1.info = 'P1'\nAND it2.info = 'P2'\nAND P3\nAND P4\nAND P5\nAND t.id = mi.movie_id\nAND t.id = mi_idx.movie_id\nAND t.id = ci.movie_id\nAND t.id = mk.movie_id\nAND ci.movie_id = mi.movie_id\nAND ci.movie_id = mi_idx.movie_id\nAND ci.movie_id = mk.movie_id\nAND mi.movie_id = mi_idx.movie_id\nAND mi.movie_id = mk.movie_id\nAND mi_idx.movie_id = mk.movie_id\nAND n.id = ci.person_id\nAND it1.id = mi.info_type_id\nAND it2.id = mi_idx.info_type_id\nAND k.id = mk.keyword_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5"]
+      },
+      {
+          "query_id": "26a",
+          "sql_template": "SELECT MIN(chn.name) AS character_name,\n   MIN(mi_idx.info) AS rating,\n   MIN(n.name) AS playing_actor,\n   MIN(t.title) AS complete_hero_movie\nFROM complete_cast AS cc,\n   comp_cast_type AS cct1,\n   comp_cast_type AS cct2,\n   char_name AS chn,\n   cast_info AS ci,\n   info_type AS it2,\n   keyword AS k,\n   kind_type AS kt,\n   movie_info_idx AS mi_idx,\n   movie_keyword AS mk,\n   name AS n,\n   title AS t\nWHERE cct1.kind = 'cast'\nAND cct2.kind LIKE '%complete%'\nAND P0\nAND it2.info = 'P1'\nAND P2\nAND P3\nAND P4\nAND P5\nAND kt.id = t.kind_id\nAND t.id = mk.movie_id\nAND t.id = ci.movie_id\nAND t.id = cc.movie_id\nAND t.id = mi_idx.movie_id\nAND mk.movie_id = ci.movie_id\nAND mk.movie_id = cc.movie_id\nAND mk.movie_id = mi_idx.movie_id\nAND ci.movie_id = cc.movie_id\nAND ci.movie_id = mi_idx.movie_id\nAND cc.movie_id = mi_idx.movie_id\nAND chn.id = ci.person_role_id\nAND n.id = ci.person_id\nAND k.id = mk.keyword_id\nAND cct1.id = cc.subject_id\nAND cct2.id = cc.status_id\nAND it2.id = mi_idx.info_type_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5"]
+      },
+      {
+          "query_id": "27a",
+          "sql_template": "SELECT MIN(cn.name) AS producing_company,\n   MIN(lt.link) AS link_type,\n   MIN(t.title) AS complete_western_sequel\nFROM complete_cast AS cc,\n   comp_cast_type AS cct1,\n   comp_cast_type AS cct2,\n   company_name AS cn,\n   company_type AS ct,\n   keyword AS k,\n   link_type AS lt,\n   movie_companies AS mc,\n   movie_info AS mi,\n   movie_keyword AS mk,\n   movie_link AS ml,\n   title AS t\nWHERE cct1.kind P0\nAND cct2.kind P1\nAND P2\nAND P3\nAND P4\nAND P5\nAND P6\nAND P7\nAND P8\nAND lt.id = ml.link_type_id\nAND ml.movie_id = t.id\nAND t.id = mk.movie_id\nAND mk.keyword_id = k.id\nAND t.id = mc.movie_id\nAND mc.company_type_id = ct.id\nAND mc.company_id = cn.id\nAND mi.movie_id = t.id\nAND t.id = cc.movie_id\nAND ml.movie_id = mk.movie_id\nAND ml.movie_id = mc.movie_id\nAND mk.movie_id = mc.movie_id\nAND ml.movie_id = mi.movie_id\nAND mk.movie_id = mi.movie_id\nAND mc.movie_id = mi.movie_id\nAND ml.movie_id = cc.movie_id\nAND mk.movie_id = cc.movie_id\nAND mc.movie_id = cc.movie_id\nAND mi.movie_id = cc.movie_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8"]
+      },
+      {
+          "query_id": "28a",
+          "sql_template": "SELECT MIN(cn.name) AS movie_company,\n   MIN(mi_idx.info) AS rating,\n   MIN(t.title) AS complete_euro_dark_movie\nFROM complete_cast AS cc,\n   comp_cast_type AS cct1,\n   comp_cast_type AS cct2,\n   company_name AS cn,\n   company_type AS ct,\n   info_type AS it1,\n   info_type AS it2,\n   keyword AS k,\n   kind_type AS kt,\n   movie_companies AS mc,\n   movie_info AS mi,\n   movie_info_idx AS mi_idx,\n   movie_keyword AS mk,\n   title AS t\nWHERE cct1.kind P0\nAND cct2.kind P1\nAND P2\nAND it1.info = 'P3'\nAND it2.info = 'P4'\nAND P5\nAND P6\nAND P7\nAND P8\nAND P9\nAND P10\nAND kt.id = t.kind_id\nAND t.id = mi.movie_id\nAND t.id = mk.movie_id\nAND t.id = mi_idx.movie_id\nAND t.id = mc.movie_id\nAND t.id = cc.movie_id\nAND mk.movie_id = mi.movie_id\nAND mk.movie_id = mi_idx.movie_id\nAND mk.movie_id = mc.movie_id\nAND mk.movie_id = cc.movie_id\nAND mi.movie_id = mi_idx.movie_id\nAND mi.movie_id = mc.movie_id\nAND mi.movie_id = cc.movie_id\nAND mc.movie_id = mi_idx.movie_id\nAND mc.movie_id = cc.movie_id\nAND mi_idx.movie_id = cc.movie_id\nAND k.id = mk.keyword_id\nAND it1.id = mi.info_type_id\nAND it2.id = mi_idx.info_type_id\nAND ct.id = mc.company_type_id\nAND cn.id = mc.company_id\nAND cct1.id = cc.subject_id\nAND cct2.id = cc.status_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"]
+      },
+      {
+        "query_id": "29a",
+        "sql_template": "SELECT MIN(chn.name) AS voiced_char,\n    MIN(n.name) AS voicing_actress,\n    MIN(t.title) AS voiced_animation\nFROM aka_name AS an,\n    complete_cast AS cc,\n    comp_cast_type AS cct1,\n    comp_cast_type AS cct2,\n    char_name AS chn,\n    cast_info AS ci,\n    company_name AS cn,\n    info_type AS it,\n    info_type AS it3,\n    keyword AS k,\n    movie_companies AS mc,\n    movie_info AS mi,\n    movie_keyword AS mk,\n    name AS n,\n    person_info AS pi,\n    role_type AS rt,\n    title AS t\nWHERE cct1.kind P0\nAND cct2.kind P1\nAND P2\nAND P3\nAND P4\nAND it.info = 'P5'\nAND it3.info = 'P6'\nAND P7\nAND P8\nAND P9\nAND P10\nAND P11\nAND t.id = mi.movie_id\nAND t.id = mc.movie_id\nAND t.id = ci.movie_id\nAND t.id = mk.movie_id\nAND t.id = cc.movie_id\nAND mc.movie_id = ci.movie_id\nAND mc.movie_id = mi.movie_id\nAND mc.movie_id = mk.movie_id\nAND mc.movie_id = cc.movie_id\nAND mi.movie_id = ci.movie_id\nAND mi.movie_id = mk.movie_id\nAND mi.movie_id = cc.movie_id\nAND ci.movie_id = mk.movie_id\nAND ci.movie_id = cc.movie_id\nAND mk.movie_id = cc.movie_id\nAND cn.id = mc.company_id\nAND it.id = mi.info_type_id\nAND n.id = ci.person_id\nAND rt.id = ci.role_id\nAND n.id = an.person_id\nAND ci.person_id = an.person_id\nAND chn.id = ci.person_role_id\nAND n.id = pi.person_id\nAND ci.person_id = pi.person_id\nAND it3.id = pi.info_type_id\nAND k.id = mk.keyword_id\nAND cct1.id = cc.subject_id\nAND cct2.id = cc.status_id;",
+        "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11"]
+      },
+      {
+          "query_id": "30a",
+          "sql_template": "SELECT MIN(mi.info) AS movie_budget,\n    MIN(mi_idx.info) AS movie_votes,\n    MIN(n.name) AS writer,\n    MIN(t.title) AS complete_violent_movie\nFROM complete_cast AS cc,\n    comp_cast_type AS cct1,\n    comp_cast_type AS cct2,\n    cast_info AS ci,\n    info_type AS it1,\n    info_type AS it2,\n    keyword AS k,\n    movie_info AS mi,\n    movie_info_idx AS mi_idx,\n    movie_keyword AS mk,\n    name AS n,\n    title AS t\nWHERE cct1.kind P0\nAND cct2.kind P1\nAND P2\nAND it1.info = 'P3'\nAND it2.info = 'P4'\nAND P5\nAND P6\nAND P7\nAND P8\nAND t.id = mi.movie_id\nAND t.id = mi_idx.movie_id\nAND t.id = ci.movie_id\nAND t.id = mk.movie_id\nAND t.id = cc.movie_id\nAND ci.movie_id = mi.movie_id\nAND ci.movie_id = mi_idx.movie_id\nAND ci.movie_id = mk.movie_id\nAND ci.movie_id = cc.movie_id\nAND mi.movie_id = mi_idx.movie_id\nAND mi.movie_id = mk.movie_id\nAND mi.movie_id = cc.movie_id\nAND mi_idx.movie_id = mk.movie_id\nAND mi_idx.movie_id = cc.movie_id\nAND mk.movie_id = cc.movie_id\nAND n.id = ci.person_id\nAND it1.id = mi.info_type_id\nAND it2.id = mi_idx.info_type_id\nAND k.id = mk.keyword_id\nAND cct1.id = cc.subject_id\nAND cct2.id = cc.status_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8"]
+      },
+      {
+          "query_id": "31a",
+          "sql_template": "SELECT MIN(mi.info) AS movie_budget,\n    MIN(mi_idx.info) AS movie_votes,\n    MIN(n.name) AS writer,\n    MIN(t.title) AS violent_liongate_movie\nFROM cast_info AS ci,\n    company_name AS cn,\n    info_type AS it1,\n    info_type AS it2,\n    keyword AS k,\n    movie_companies AS mc,\n    movie_info AS mi,\n    movie_info_idx AS mi_idx,\n    movie_keyword AS mk,\n    name AS n,\n    title AS t\nWHERE P0\nAND P1\nAND it1.info = 'P2'\nAND it2.info = 'P3'\nAND P4\nAND P5\nAND P6\nAND t.id = mi.movie_id\nAND t.id = mi_idx.movie_id\nAND t.id = ci.movie_id\nAND t.id = mk.movie_id\nAND t.id = mc.movie_id\nAND ci.movie_id = mi.movie_id\nAND ci.movie_id = mi_idx.movie_id\nAND ci.movie_id = mk.movie_id\nAND ci.movie_id = mc.movie_id\nAND mi.movie_id = mi_idx.movie_id\nAND mi.movie_id = mk.movie_id\nAND mi.movie_id = mc.movie_id\nAND mi_idx.movie_id = mk.movie_id\nAND mi_idx.movie_id = mc.movie_id\nAND mk.movie_id = mc.movie_id\nAND n.id = ci.person_id\nAND it1.id = mi.info_type_id\nAND it2.id = mi_idx.info_type_id\nAND k.id = mk.keyword_id\nAND cn.id = mc.company_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5", "P6"]
+      },
+      {
+          "query_id": "32a",
+          "sql_template": "SELECT MIN(lt.link) AS link_type,\n    MIN(t1.title) AS first_movie,\n    MIN(t2.title) AS second_movie\nFROM keyword AS k,\n    link_type AS lt,\n    movie_keyword AS mk,\n    movie_link AS ml,\n    title AS t1,\n    title AS t2\nWHERE P0\nAND mk.keyword_id = k.id\nAND t1.id = mk.movie_id\nAND ml.movie_id = t1.id\nAND ml.linked_movie_id = t2.id\nAND lt.id = ml.link_type_id\nAND mk.movie_id = t1.id;",
+          "placeholders": ["P0"]
+      },
+      {
+          "query_id": "33a",
+          "sql_template": "SELECT MIN(cn1.name) AS first_company,\n    MIN(cn2.name) AS second_company,\n    MIN(mi_idx1.info) AS first_rating,\n    MIN(mi_idx2.info) AS second_rating,\n    MIN(t1.title) AS first_movie,\n    MIN(t2.title) AS second_movie\nFROM company_name AS cn1,\n    company_name AS cn2,\n    info_type AS it1,\n    info_type AS it2,\n    kind_type AS kt1,\n    kind_type AS kt2,\n    link_type AS lt,\n    movie_companies AS mc1,\n    movie_companies AS mc2,\n    movie_info_idx AS mi_idx1,\n    movie_info_idx AS mi_idx2,\n    movie_link AS ml,\n    title AS t1,\n    title AS t2\nWHERE P0\nAND it1.info = 'P1'\nAND it2.info = 'P1'\nAND P2\nAND P2\nAND P3\nAND P4\nAND P5\nAND lt.id = ml.link_type_id\nAND t1.id = ml.movie_id\nAND t2.id = ml.linked_movie_id\nAND it1.id = mi_idx1.info_type_id\nAND t1.id = mi_idx1.movie_id\nAND kt1.id = t1.kind_id\nAND cn1.id = mc1.company_id\nAND t1.id = mc1.movie_id\nAND ml.movie_id = mi_idx1.movie_id\nAND ml.movie_id = mc1.movie_id\nAND mi_idx1.movie_id = mc1.movie_id\nAND it2.id = mi_idx2.info_type_id\nAND t2.id = mi_idx2.movie_id\nAND kt2.id = t2.kind_id\nAND cn2.id = mc2.company_id\nAND t2.id = mc2.movie_id\nAND ml.linked_movie_id = mi_idx2.movie_id\nAND ml.linked_movie_id = mc2.movie_id\nAND mi_idx2.movie_id = mc2.movie_id;",
+          "placeholders": ["P0", "P1", "P2", "P3", "P4", "P5"]
+      }
+    ]
+}
+  

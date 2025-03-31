@@ -1,0 +1,1350 @@
+<link rel="stylesheet" type="text/css" href="static/styles.css.html">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+
+<!-- Include CodeMirror CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+<!-- Theme (optional) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
+<!-- Include CodeMirror JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+<!-- Include SQL Mode -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/sql/sql.min.js"></script>
+
+<div class="custom-center" data-toggle="tooltip" data-placement="top" title="Hinting Sensitive Subqueries Selectivity for Query Performance Tuning">
+    <h1>Hint-QPT: Demo for PARQO</h1>
+</div>
+
+<div class="query-container">
+    <!-- Left Panel (Query Form) -->
+    <div class="left-panel">
+        <div class="row" style="text-align: center; margin-bottom: 1vh; margin-top: 1.5vh;">
+            <div class="dropdown" style="width: 70%; margin: 0 auto; position: relative !important;">
+                <button class="dropdown-button" id="main-dropdown" style="width:70%; position: relative; z-index: 100 !important;">Choose Query</button>
+                <div class="dropdown-content" id="main-content" style="width: 100% !important; position: absolute !important; left: 0; top: 100%; z-index: 1000 !important; background-color: white !important; box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;">
+                    <!-- main menu -->
+                    <div class="dropdown" style="display: block !important; width: 100% !important; position: relative !important;">
+                        <button class="dropdown-button" id="example-dropdown" style="width:100% !important; text-align: left !important; background: transparent !important; color: black !important;">JOB Benchmark Queries</button>
+                    </div>
+                    
+                    <div class="dropdown" style="display: block !important; width: 100% !important; position: relative !important;">
+                        <button class="dropdown-button" id="sample-dropdown" style="width:100% !important; text-align: left !important; background: transparent !important; color: black !important;">With Random Parameters</button>
+                    </div>
+                    
+                    <div class="dropdown" style="display: block !important; width: 100% !important; position: relative !important;">
+                        <button class="dropdown-button" id="template-dropdown" style="width:100% !important; text-align: left !important; background: transparent !important; color: black !important;">With Your Own Parameters</button>
+                    </div>
+                </div>
+                
+                <!-- sub menu -->
+                <div id="example-content" class="dropdown-content" style="position: absolute !important; left: 100% !important; top: 0 !important; width: 100px !important; display: none; z-index: 1001 !important; background-color: white !important; box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;">
+                    {% for example in examples %}
+                    <a href="#" data-content="{{ example.content }}">{{ example.name[:-4] }}</a>
+                    {% endfor %}
+                </div>
+                
+                <div id="sample-content" class="dropdown-content" style="position: absolute !important; left: 100% !important; top: 0 !important; width: 100px !important; display: none; z-index: 1001 !important; background-color: white !important; box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;">
+                    {% for query_id, sql_list in samples.items() %}
+                    <a href="#" data-query-id="{{ query_id }}">{{ query_id }}</a>
+                    {% endfor %}
+                </div>
+                
+                <div id="template-content" class="dropdown-content" style="position: absolute !important; left: 100% !important; top: 0 !important; width: 100px !important; display: none; z-index: 1001 !important; background-color: white !important; box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;">
+                    {% for template in templates %}
+                    <a href="#" class="template-link" data-sql="{{ template.content }}"
+                        data-placeholders="{{ template.placeholders }}" data-query="{{ template.name }}"
+                        data-hints="{{ template.hints}}">
+                        {{ template.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Query & Sample Query -->
+        <form class="query-form" method="post" id="query-textarea-container">
+            <div class="query-file-indicator">
+                Current Query from: <strong id="current-query-name">No query selected</strong>
+            </div>
+            <textarea name="sql_query" id="sql_query" style="margin-bottom: 1vh;">{{ last_query }}</textarea>
+            <input type="hidden" name="query_file" id="query_file" value="{{ last_file }}">
+            <div class="custom-center" style="margin-bottom: 1vh;">
+                <button type="submit" style="width: 50%">Analyze Query</button>
+                <button id="next-sample" style="width: 45%; margin-right: 10px; display: none;">Change</button>
+            </div>
+        </form>
+
+        <!-- Try-your-own Query -->
+        <div id="query-detailed-container" style="display: none;">
+            <div id="sql-display" class="sql-display" style="height: 28%; "></div>
+            <div id="placeholders-inputs" class="placeholders-inputs" style="height: 12%; margin-bottom: 1vh;"></div>
+            <input type="hidden" name="query_filename" id="query_filename" value="">
+            <div class="custom-center">
+                <button type="button" onclick="submitCustomQuery()" style="width: 45%; height: 5vh; font-size: calc(1vh + 0.7vw); margin-bottom: 1vh;">Analyze Query</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Middle Panel (Selectivity Form) -->
+    <div class="middle-panel">
+        <!-- Interactive Area for Sensitive Dimensions -->
+        <div class="interactive-area">
+            <form class="selectivity-form">
+                <div class="custom-center">
+                    <h3 style="display: inline-block; margin-right: 10px;" data-toggle="tooltip" 
+                        title="Icon 1 (magnifying glass): Get true selectivities
+Icon 2 (reset): Reset to PostgreSQL estimates">Selectivity Hints</h3>
+                </div>
+                <div class="custom-center" style="margin-top: -3vh; margin-bottom: 2vh;">
+                    {% if matching_stats %}
+                    <button type="button" class="change-all-selectivity-btn" style="width: 30% !important">
+                        <i class="fas fa-search-plus"></i>&nbsp; True
+                    </button>
+                    <button type="button" class="reset-all-selectivity-btn" style="width: 30% !important">
+                        <i class="fas fa-undo-alt"></i>&nbsp; Reset
+                    </button>
+                    {% endif %}
+                </div>
+
+                <div class="input-group-container">
+                    <div class="loading-indicator" id="loading-selectivity-all" style="display: none;">Loading Info...
+                    </div>
+                    {% for key, stats in matching_stats.items() %}
+                    <div class="input-group">
+                        <strong 
+                            data-toggle="tooltip" 
+                            data-placement="top"
+                            title="{{'Sensitive dimension' if stats.isSensitive else 'Regular dimension'}}">
+                            <span style="{{ 'background-color: rgba(255, 204, 0, 0.7); color: black; box-decoration-break: clone; -webkit-box-decoration-break: clone; padding: 0 2px; display: inline; font-stretch: 110%; letter-spacing: 0.5px;' if stats.isSensitive else 'color: black; font-stretch: 110%; letter-spacing: 0.5px;' }}">
+                                {{ key | replace('-', ' ⨝ ') }}
+                            </span>
+                        </strong>
+                        <div class="loading-indicator" id="loading-{{ key }}"
+                            style="display: none; padding: 0px; margin-right: 31.5px;">Loading Info...</div>
+                        <input type="text" name="{{ key }}" value="{{ stats['selectivity'] }}"
+                            class="selectivity-input format-number" />
+                        <button type="button" class="change-selectivity-btn"
+                            data-key="{{ key }}" style="margin-left: 15px;">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <button type="button" class="reset-selectivity-btn"
+                            data-key="{{ key }}" style="margin-left: 15px;">
+                            <i class="fas fa-undo-alt"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if matching_stats %}
+                <div class="custom-center" style="margin-bottom: 0px;">
+                    <button type="submit" style="width: 50%;">Inject & Reoptimize</button>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Panel (Latency Info List) -->
+    <div class="right-panel">
+        <div class="custom-center" style="margin-bottom: 0px; padding-bottom: 0px;">
+            <h3>Plan's Estimated Cost & Latency</h3>
+        </div>
+        {% set order_of_keys = ['original_plan', 'robust_plan', 'adjusted_plan'] %}
+        <div class="custom-center">
+            <div id="cost-latency-chart" style="width: 95%; height: 70% !important; margin-bottom: 5px; margin-left: 5px;"></div>
+
+            {% if matching_stats %}
+            <div class="custom-center" style="margin-bottom: 0px; margin-top: -2vh; padding-top: 0px; position: relative; z-index: 9999;">
+                <button type="button" style="width: 50%"
+                    onclick="location.href='{{ url_for('index.show_plan') }}'">Visualize Plan</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="flex-container" style="margin-top: 20px;">
+    <div id="left-panel" class="panel-content" style="margin-right: 10px;">
+        <div class="custom-center" style="margin-bottom: 0px !important;">
+            <h3 style="color: #5a4fcf; margin-bottom: 0px !important;">Join Graph</h3>
+        </div>
+        {% if visualization %}
+        <div>{{ visualization|safe }}</div>
+        {% endif %}
+    </div>
+    <div id="resizer" class="resizer"></div>
+    <div id="right-panel" class="panel-content" style="margin-left: 10px;">
+        <div class="custom-center" style="margin-bottom: 0px !important;">
+            <h3 style="color: #5a4fcf; margin-bottom: 0px !important;">Error distribution</h3>
+        </div>
+    </div>
+</div>
+
+<div id="full-page-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 9999; display: flex; justify-content: center; align-items: center;">
+    <div style="background-color: white; padding: 30px; border-radius: 10px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+        <div class="spinner" style="border: 6px solid #f3f3f3; border-top: 6px solid #5a4fcf; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto;"></div>
+        <h3 style="margin: 0; color: #5a4fcf;">Analyzing Query...</h3>
+    </div>
+</div>
+
+
+<script>
+    // Initialize CodeMirror editor
+    var editor;
+    $(document).ready(function() {
+        editor = CodeMirror.fromTextArea(document.getElementById("sql_query"), {
+            mode: "text/x-sql",
+            theme: "default",
+            lineNumbers: true,
+            indentWithTabs: true,
+            smartIndent: true,
+            matchBrackets: true
+        });
+
+        // save query
+        $('form.query-form').on('submit', function() {
+            editor.save();
+            document.getElementById('full-page-loader').style.display = 'flex';
+        });
+    });
+
+    if (window.onload) {
+        var originalOnload = window.onload;
+        window.onload = function() {
+            if (typeof originalOnload === 'function') {
+                originalOnload();
+            }
+            setTimeout(function() {
+                document.getElementById('full-page-loader').style.display = 'none';
+            }, 100);
+        };
+    } else {
+        window.onload = function() {
+            document.getElementById('full-page-loader').style.display = 'none';
+        };
+    }
+
+    // tooltip
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+
+    // Sample
+    var samples = {{ samples | tojson | safe }};
+    $(document).ready(function () {
+        $('.dropdown-content').on('click', 'a', function (e) {
+            e.preventDefault();
+            const queryId = $(this).data('query-id');
+            displaySampleQuery(queryId, 0);
+        });
+    });
+
+    function displaySampleQuery(queryId, index) {
+        let actual_fileName = queryId + '.sql'
+        if (samples[queryId] && samples[queryId].length > index) {
+            // Update the CodeMirror editor's value with the selected SQL query
+            editor.setValue(samples[queryId][index].trim());
+            
+            $('#query_file').val(actual_fileName);
+            $('#current-query-name').text(queryId);
+            $('#next-sample').show().data('index', index).data('queryId', queryId);
+        }
+    }
+
+    $(document).ready(function () {
+        $('#next-sample').click(function (e) {
+            e.preventDefault();
+            let currentQueryId = $(this).data('queryId');
+            let currentIndex = $(this).data('index');
+
+            $.ajax({
+                url: '{{ url_for("index.next_query") }}',
+                type: 'POST',
+                data: { queryId: currentQueryId, index: currentIndex },
+                success: function (response) {
+                    editor.setValue(response.sql.trim());
+                    $('#query_file').val(response.queryFile);
+                    $('#next-sample').data('index', response.index);
+                },
+                error: function (xhr) {
+                    console.log('Error:', xhr.responseText);
+                }
+            });
+        });
+    });
+
+
+    // Template
+    $(document).on('click', '.template-link', function (e) {
+        e.preventDefault();
+        var sqlTemplate = $(this).data('sql').replace(/^"|"$/g, '');
+        var placeholders = $(this).data('placeholders');
+        var fileName = $(this).data('query');
+        var hints = $(this).data('hints');
+        console.log(hints);
+
+        if (Array.isArray(placeholders)) {
+            loadTemplate(sqlTemplate, placeholders, fileName, hints);
+        } else {
+            console.error('Placeholders is not an array:', placeholders);
+        }
+    });
+
+    function loadTemplate(sqlTemplate, placeholders, fileName, hints) {
+        $('#query-textarea-container').hide();
+        $('#query-detailed-container').show();
+
+        // keep original sql query
+        $('<input>').attr({
+            type: 'hidden',
+            id: 'original-sql-template',
+            value: sqlTemplate
+        }).appendTo('#query-detailed-container');
+
+        var formattedSql = sqlTemplate.replace(/\\n/g, '<br>');
+        formattedSql = formattedSql.replace(/\\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+
+        // Highlight placeholders in the formatted SQL
+        placeholders.forEach(function (placeholder) {
+            var regex = new RegExp(`\\b${placeholder}\\b`, 'g'); // Adjust regex as necessary
+            formattedSql = formattedSql.replace(regex, `<strong style="color: #5a4fcf;">${placeholder}</strong>`);
+        });
+        $('#sql-display').html(formattedSql); // Replace newlines with HTML breaks for display
+        $('#query_filename').html(fileName);
+
+        $('#placeholders-inputs').empty();
+        placeholders.forEach(function (placeholder, index) {
+            var hint = hints[index];
+            const placeholderInput = `
+                <div class="input-group">
+                    <strong>${placeholder}: (${hint}) </strong>
+                    <input type="text" name="${placeholder}" class="placeholder-input" />
+                </div>`;
+            $('#placeholders-inputs').append(placeholderInput);
+        });
+    }
+
+    function submitCustomQuery() {
+        const sqlTemplate = $('#original-sql-template').val();
+        const query_fileName = $('#query_filename').text();
+        let customQuery = sqlTemplate.replace(/\\n/g, '\n');
+        customQuery = customQuery.replace(/\\t/g, '\t');
+
+        let actual_fileName = query_fileName + '.sql'
+
+        // Replace placeholders with input values
+        $('.placeholder-input').each(function () {
+            const fullText = $(this).prev().text().trim();
+            const placeholder = fullText.split(':')[0]; // Split on colon and take the first part
+            const value = $(this).val();
+            customQuery = customQuery.replace(new RegExp(`\\b${placeholder}\\b`, 'g'), value);
+            console.log("replaced")
+        });
+
+        // Update the textarea and submit the form if needed
+        editor.setValue(customQuery);
+        $('#query_file').val(actual_fileName);
+        console.log("Custom Query:", customQuery);
+
+        // Submit the form
+        $('form.query-form').submit();
+    }
+
+    // Selectivity
+    var forms = document.querySelectorAll('.selectivity-form');
+    forms.forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            // Check each input in the form
+            var valid = true;
+            document.querySelectorAll('.selectivity-input').forEach(function (input) {
+                var numericValue = parseFloat(input.value);
+                if (isNaN(numericValue)) {
+                    alert("Invalid input, not a number in " + input.name);
+                    valid = false;
+                }
+            });
+            if (!valid) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    $(document).ready(function () {
+        function handleSelectivitySingle(button, actionUrl, data) {
+            var $inputGroup = button.closest('.input-group');
+            var $loadingIndicator = $inputGroup.find('.loading-indicator');
+
+            $.ajax({
+                url: actionUrl,
+                type: 'POST',
+                data: data,
+                beforeSend: function () {
+                    $("button").prop("disabled", true);
+                    $loadingIndicator.show();
+                    $inputGroup.find('.selectivity-input').hide();
+                },
+                success: function (response) {
+                    $inputGroup.find('.selectivity-input').val(response.newValue).show();
+                    formatExponentialNumbers();
+                },
+                error: function () {
+                    alert('Failed to process selectivity.');
+                },
+                complete: function () {
+                    $("button").prop("disabled", false);
+                    $loadingIndicator.hide();
+                }
+            });
+        }
+
+        // Update selectivity for a single dimension
+        $('.change-selectivity-btn').click(function (e) {
+            e.preventDefault();
+            var $button = $(this);
+            var key = $button.data('key');
+            var inputValue = $('input[name="' + key + '"]').val();  // Get current value to send to the server
+
+            handleSelectivitySingle($button, '{{ url_for("index.update_selectivity_single") }}', {
+                key: key,
+                currentValue: inputValue
+            });
+        });
+
+        // Reset selectivity for a single dimension
+        $('.reset-selectivity-btn').click(function (e) {
+            e.preventDefault();
+            var $button = $(this);
+            var key = $button.data('key');
+
+            handleSelectivitySingle($button, '{{ url_for("index.reset_selectivity_single") }}', {
+                key: key
+            });
+        });
+
+        // Update & Reset all
+        function handleSelectivity(actionUrl, errorMessage) {
+            $.ajax({
+                url: actionUrl,
+                type: 'POST',
+                beforeSend: function () {
+                    $("button").prop("disabled", true);
+                    $("#loading-selectivity-all").show();
+                    $(".input-group").hide();
+                },
+                success: function (response) {
+                    $('.selectivity-input').each(function () {
+                        var key = $(this).attr('name');
+                        if (response.hasOwnProperty(key)) {
+                            $('input[name="' + key + '"]').val(response[key]['selectivity']);
+                        }
+                    });
+                    formatExponentialNumbers();
+                },
+                error: function () {
+                    alert(errorMessage);
+                },
+                complete: function () {
+                    $("button").prop("disabled", false);
+                    $("#loading-selectivity-all").hide();
+                    $(".input-group").show();
+                }
+            });
+        }
+
+        // Bind actions to buttons
+        $('.change-all-selectivity-btn').click(function (e) {
+            e.preventDefault();
+            handleSelectivity('{{ url_for("index.change_all_selectivity") }}', 'Failed to update all selectivities.');
+        });
+
+        $('.reset-all-selectivity-btn').click(function (e) {
+            e.preventDefault();
+            handleSelectivity('{{ url_for("index.reset_all_selectivity") }}', 'Failed to reset all selectivities.');
+        });
+    });
+
+    // Cost & Latency Chart
+    $(document).ready(function () {
+        // Get cost information first
+        const serverCostInfoDict = {{ cost_info_dict|tojson|safe }};
+        const cost_info_dict = typeof serverCostInfoDict !== 'undefined' ? serverCostInfoDict : {};
+
+        // Data structure to store cost & latency values as direct floats
+        let chartData = {
+            original_plan: { cost: 0, latency: 0 },
+            robust_plan: { cost: 0, latency: 0 },
+            adjusted_plan: { cost: 0, latency: 0 }
+        };
+
+        // Check if we came here from a form submission (POST request)
+        const isPostRequest = document.referrer && (new URL(document.referrer)).pathname === window.location.pathname;
+        const hasCostData = Object.keys(cost_info_dict).length > 0;
+
+        // Initialize chart only if this is a result of form submission
+        if (isPostRequest && hasCostData) {
+            initializeChart();
+        }
+        var latencyFetched = false;
+
+        // Initialize Plotly chart with cost data
+        function initializeChart() {
+            const order_of_keys = ['original_plan', 'robust_plan', 'adjusted_plan'];
+            const labels = [];
+            const costValues = [];
+
+            let baselineCost = 0;
+
+            // Check if cost_info_dict exists in the global scope
+            if (typeof cost_info_dict !== 'undefined') {
+                if ('original_plan' in cost_info_dict) {
+                    baselineCost = parseFloat(cost_info_dict['original_plan'][0]['cost']);
+                }
+
+                // Get cost data from the cost_info_dict
+                order_of_keys.forEach(function (key) {
+                    if (key in cost_info_dict) {
+                        labels.push(getDisplayName(key));
+                        const costValue = parseFloat(cost_info_dict[key][0]['cost']);
+                        costValues.push(costValue);
+                        // Store in our chart data structure
+                        chartData[key].cost = costValue;
+                    }
+                });
+
+                // hover speedup/regression text
+                const hoverTexts = [];
+                order_of_keys.forEach(function (key, index) {
+                    if (key in cost_info_dict) {
+                        const value = chartData[key].cost;
+                        let comparisonText = '';
+                        
+                        // baseline exist
+                        if (baselineCost > 0) {
+                            if (baselineCost >= value) {
+                                // original_plan >= plan
+                                const ratio = (baselineCost / value).toFixed(2);
+                                comparisonText = `<br>${ratio}X`;
+                            } else {
+                                // original_plan < plan
+                                const ratio = (value / baselineCost).toFixed(2);
+                                comparisonText = `<br>-${ratio}X`;
+                            }
+                        }
+                        
+                        hoverTexts.push(`${value.toFixed(4)} ${comparisonText}`);
+                    }
+                });
+
+                // Create bar chart traces - just cost for now
+                const costTrace = {
+                    x: labels,
+                    y: costValues,
+                    name: 'Estimated Cost',
+                    type: 'bar',
+                    text: hoverTexts,
+                    hovertemplate: '%{text}<extra></extra>',
+                    marker: {
+                        color: 'rgba(54, 162, 235, 0.7)',
+                        line: {
+                            color: 'rgba(54, 162, 235, 1.0)',
+                            width: 1
+                        }
+                    }
+                };
+
+                const layout = {
+                    showlegend: true,
+                    yaxis: { title: 'Postgres\'s Estimated Cost', side: 'left' },
+                    yaxis2: {
+                        title: 'Latency (ms)',
+                        side: 'right',
+                        overlaying: 'y',
+                        rangemode: 'tozero'
+                    },
+                    barmode: 'group',
+                    legend: { orientation: 'h', y: -0.2 },
+                    margin: { l: 50, r: 50, t: 50, b: 50 },
+                    hovermode: 'closest'
+                };
+
+                // Create plot with only cost data initially
+                Plotly.newPlot('cost-latency-chart', [costTrace], layout, {responsive: true, displayModeBar: false});
+
+                // If we have cost data, fetch latency
+                if (labels.length > 0 && !latencyFetched) {
+                    $("button").prop("disabled", true);
+                    fetchLatencyInfo();
+                    latencyFetched = true;
+                }
+            } else {
+                console.log("No cost_info_dict available for initialization");
+            }
+        }
+
+        // Fetch latency information
+        function fetchLatencyInfo() {
+            $.ajax({
+                url: '{{ url_for("index.get_latency") }}',
+                type: 'GET',
+                success: function (response) {
+                    updateLatencyInfo(response.latency_info_dict);
+                    $("button").prop("disabled", false);
+                },
+                error: function (response) {
+                    alert('Error retrieving latency information: ' + response.error);
+                    $("button").prop("disabled", false);
+                }
+            });
+        }
+
+
+        // Selectivity injection
+        $('.selectivity-form').on('submit', function (e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            $.ajax({
+                url: '{{ url_for("index.get_cost") }}',
+                type: 'POST',
+                data: formData,
+                beforeSend: function () {
+                    $("button").prop("disabled", true);
+                },
+                success: function (response) {
+                    console.log("Getting cost information", response.cost_info_dict);
+                    updateCostInfo(response.cost_info_dict);
+                    console.log("Current chart data", JSON.stringify(chartData));
+                    fetchLatencyInfo();
+                },
+                error: function (response) {
+                    alert('Error updating selectivity: ' + response.error);
+                    $("button").prop("disabled", false);
+                }
+            });
+        });
+
+        // Get display name for plan types
+        function getDisplayName(key) {
+            switch (key) {
+                case 'original_plan':
+                    return 'Postgres Plan';
+                case 'robust_plan':
+                    return 'PARQO Plan';
+                case 'adjusted_plan':
+                    return 'Adjusted Plan';
+                default:
+                    return key;
+            }
+        }
+
+        // Update chart with both cost and latency data
+        function updateChart() {
+            const order_of_keys = ['original_plan', 'robust_plan', 'adjusted_plan'];
+            const labels = [];
+            const costValues = [];
+            const latencyValues = [];
+
+            let baselineCost = 0;
+            let baselineLatency = 0;
+            const costHoverTexts = [];
+            const latencyHoverTexts = [];
+
+            if ('original_plan' in chartData) {
+                baselineCost = chartData['original_plan'].cost;
+                baselineLatency = chartData['original_plan'].latency;
+            }
+
+            // Prepare data for plotting
+            order_of_keys.forEach(function (key) {
+                // Include all plans that have cost data, even if latency is 0
+                if (chartData[key].cost > 0) {
+                    labels.push(getDisplayName(key));
+                    costValues.push(chartData[key].cost);
+                    latencyValues.push(chartData[key].latency);
+                }
+            });
+
+            // Only proceed if we have data to show
+            if (labels.length === 0) {
+                console.log("No data available to plot");
+                return;
+            }
+
+            order_of_keys.forEach(function (key) {
+                if (chartData[key].cost > 0) {
+                    const costValue = chartData[key].cost;
+                    const latencyValue = chartData[key].latency;
+                    
+                    // cost hover text
+                    let costComparisonText = '';
+                    if (baselineCost > 0) {
+                        if (baselineCost >= costValue) {
+                            const ratio = (baselineCost / costValue).toFixed(2);
+                            costComparisonText = `<br>${ratio}X`;
+                        } else {
+                            const ratio = (costValue / baselineCost).toFixed(2);
+                            costComparisonText = `<br>-${ratio}X`;
+                        }
+                    }
+                    costHoverTexts.push(`${costValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}, ${costComparisonText}`);
+                    
+                    // latency hover text
+                    let latencyComparisonText = '';
+                    if (baselineLatency > 0) {
+                        if (baselineLatency >= latencyValue) {
+                            const ratio = (baselineLatency / latencyValue).toFixed(2);
+                            latencyComparisonText = `<br>${ratio}X`;
+                        } else {
+                            const ratio = (latencyValue / baselineLatency).toFixed(2);
+                            latencyComparisonText = `<br>-${ratio}X`;
+                        }
+                    }
+                    latencyHoverTexts.push(`${latencyValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ms, ${latencyComparisonText}`);
+                }
+            });
+
+            // Create bar chart traces
+            const costTrace = {
+                x: labels,
+                y: costValues,
+                name: 'Estimated Cost',
+                type: 'bar',
+                text: costHoverTexts,
+                hovertemplate: '%{text}<extra></extra>',
+                visible: 'legendonly',
+                marker: {
+                    color: 'rgba(54, 162, 235, 0.7)',
+                    line: {
+                        color: 'rgba(54, 162, 235, 1.0)',
+                        width: 1
+                    }
+                }
+            };
+
+            const latencyTrace = {
+                x: labels,
+                y: latencyValues,
+                name: 'Latency (ms)',
+                type: 'bar',
+                yaxis: 'y2',
+                text: latencyHoverTexts,
+                hovertemplate: '%{text}<extra></extra>',
+                visible: true,
+                marker: {
+                    color: 'rgba(255, 99, 132, 0.7)',
+                    line: {
+                        color: 'rgba(255, 99, 132, 1.0)',
+                        width: 1
+                    }
+                }
+            };
+
+            const layout = {
+                showlegend: true,
+                yaxis: { 
+                    title: 'Postgres\'s Estimated Cost', 
+                    side: 'left',
+                    autorange: true 
+                },
+                yaxis2: {
+                    title: 'Latency (ms)',
+                    side: 'right',
+                    overlaying: 'y',
+                    autorange: true 
+                },
+                barmode: 'group',
+                bargap: 0.15,
+                bargroupgap: 0.1,
+                legend: { orientation: 'h', y: -0.2 },
+                margin: { l: 50, r: 50, t: 50, b: 50 },
+                hovermode: 'closest'
+            };
+
+            `
+            // Update the plot
+            console.log("Updating chart with data:", JSON.stringify(chartData));
+            Plotly.react('cost-latency-chart', [costTrace, latencyTrace], layout, {responsive: true, displayModeBar: false});
+            `
+
+            // 0: Cost, 1: Latency
+            let currentlyVisible = 1;
+
+            // Update the plot
+            console.log("Updating chart with data:", JSON.stringify(chartData));
+            const chartElement = document.getElementById('cost-latency-chart');
+            Plotly.react(chartElement, [costTrace, latencyTrace], layout, {responsive: true, displayModeBar: false});
+            
+            chartElement.on('plotly_legendclick', function(data) {
+                // get current clicked legend index
+                const clickedTraceIndex = data.curveNumber;
+                
+                if (clickedTraceIndex === currentlyVisible) {
+                    return false;
+                }
+                
+                // switch
+                if (clickedTraceIndex === 0) {
+                    // cost
+                    Plotly.restyle(chartElement, {'visible': [true, 'legendonly']}, [0, 1]);
+                    currentlyVisible = 0;
+                } else {
+                    // latency
+                    Plotly.restyle(chartElement, {'visible': ['legendonly', true]}, [0, 1]);
+                    currentlyVisible = 1;
+                }
+                
+                return false;
+            });
+        }
+
+        // Update with latency information
+        function updateLatencyInfo(latencyInfo) {
+            var order_of_keys = ['original_plan', 'robust_plan', 'adjusted_plan'];
+
+            order_of_keys.forEach(function (key) {
+                if (latencyInfo.hasOwnProperty(key)) {
+                    const latencyValue = parseFloat(latencyInfo[key][0]['latency']);
+                    chartData[key].latency = latencyValue;
+                }
+            });
+
+            updateChart();
+        }
+
+        // Update with cost information
+        function updateCostInfo(costInfo) {
+            var order_of_keys = ['original_plan', 'robust_plan', 'adjusted_plan'];
+
+            order_of_keys.forEach(function (key) {
+                if (costInfo.hasOwnProperty(key)) {
+                    const costValue = parseFloat(costInfo[key][0]['cost']);
+                    chartData[key].cost = costValue;
+                }
+            });
+
+            // Don't update chart here - wait for latency to complete the data
+        }
+    });
+
+
+    // All - drop down
+    document.addEventListener('DOMContentLoaded', function () {
+        // image resizer
+        const resizer = document.getElementById('resizer');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', function (e) {
+            isResizing = true;
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', stopResize);
+        });
+
+        function handleMouseMove(e) {
+            if (!isResizing) return;
+            let offsetRight = document.body.offsetWidth - (e.clientX - document.body.offsetLeft);
+            let minWidth = 10; // Minimum width for the right panel
+            let maxWidth = document.body.offsetWidth - minWidth - 10; // Subtract the width of the resizer from the maximum width
+            if (offsetRight > minWidth && offsetRight < maxWidth) {
+                document.getElementById('right-panel').style.width = offsetRight + 'px';
+                document.getElementById('left-panel').style.width = `calc(100% - ${offsetRight + 10}px)`; // Add the resizer width to the calculation
+            }
+
+            // Resize each Plotly chart found by class name
+            document.querySelectorAll('.js-plotly-plot').forEach(function (plotDiv) {
+                console.log('resizing move');
+                Plotly.relayout(plotDiv, {
+                    width: plotDiv.clientWidth
+                });
+            });
+        }
+
+        function stopResize() {
+            isResizing = false;
+            document.removeEventListener('mousemove', handleMouseMove);
+
+            // Resize each Plotly chart found by class name
+            document.querySelectorAll('.js-plotly-plot').forEach(function (plotDiv) {
+                console.log('resizing');
+                Plotly.relayout(plotDiv, {
+                    width: plotDiv.clientWidth
+                });
+            });
+        }
+
+        // format numbers
+        formatExponentialNumbers();
+
+        // Handle Main Query Dropdown
+        var mainDropdownButton = document.getElementById('main-dropdown');
+        var mainDropdownContent = document.getElementById('main-content');
+        mainDropdownButton.onclick = function () {
+            mainDropdownContent.style.display = 'block';
+        };
+
+        function hideAllSubmenus() {
+            document.getElementById('example-content').style.display = 'none';
+            document.getElementById('sample-content').style.display = 'none';
+            document.getElementById('template-content').style.display = 'none';
+        }
+
+        // Handle Example Query Dropdown
+        var exampleDropdownButton = document.getElementById('example-dropdown');
+        var exampleDropdownContent = document.getElementById('example-content');
+        exampleDropdownButton.onclick = function () {
+            hideAllSubmenus();
+            exampleDropdownContent.style.display = 'block';
+            $('#next-sample').hide();
+        };
+
+        // Handle Sample Query Dropdown
+        var sampleDropdownButton = document.getElementById('sample-dropdown');
+        var sampleDropdownContent = document.getElementById('sample-content');
+        sampleDropdownButton.onclick = function () {
+            hideAllSubmenus();
+            sampleDropdownContent.style.display = 'block';
+        };
+
+        // Handle Template Dropdown
+        var templateDropdownButton = document.getElementById('template-dropdown');
+        var templateDropdownContent = document.getElementById('template-content');
+        templateDropdownButton.onclick = function () {
+            hideAllSubmenus();
+            templateDropdownContent.style.display = 'block';
+        };
+
+        // Adjust query display
+        function adjustQueryDisplay() {
+            var currentQueryNameElement = document.getElementById('current-query-name');
+            var currentQueryText = currentQueryNameElement.textContent;
+            var hasLastQuery = '{{ last_file }}' !== '';
+
+            // Decide what to display based on the current query text
+            if (currentQueryText === 'No query selected' && hasLastQuery) {
+                currentQueryNameElement.textContent = '{{ last_file }}'; // Show last query if no current query is selected
+            } else if (currentQueryText === 'No query selected') {
+                currentQueryNameElement.textContent = 'No query selected';
+            }
+        }
+        adjustQueryDisplay();
+
+        // Example input
+        document.querySelectorAll('.dropdown-content a').forEach(item => {
+            item.addEventListener('click', function (e) {
+                $('#query-detailed-container').hide();
+                $('#query-textarea-container').show();
+                e.preventDefault();
+                editor.setValue(this.getAttribute('data-content'));
+                var fileName = this.textContent.trim() + '.sql';
+                document.getElementById('query_file').value = fileName;
+                // show current query index
+                document.getElementById('current-query-name').textContent = this.textContent.trim();
+                adjustQueryDisplay();
+            });
+        });
+
+        // Hide dropdowns
+        window.onclick = function (event) {
+            if (!event.target.matches('.dropdown-button')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.style.display === 'block') {
+                        openDropdown.style.display = 'none';
+                    }
+                }
+            }
+        };
+    });
+
+    // Format the shown numbers
+    function formatExponentialNumbers() {
+        document.querySelectorAll('.format-number').forEach(function (input) {
+            var value = parseFloat(input.value);
+            if (!isNaN(value)) {
+                // Only show four significant digits
+                input.value = value.toExponential(4);
+            }
+        });
+    }
+
+    function formatFixedNumbers() {
+        document.querySelectorAll('.fixed-number').forEach(function (element) {
+            const rawValue = element.textContent.replace(/[^0-9.-]/g, '');
+            var value = parseFloat(rawValue);
+            if (!isNaN(value)) {
+                // Only show two decimal places
+                element.textContent = value.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+        });
+    }
+
+    require.config({
+        paths: {
+            'd3': 'https://d3js.org/d3.v4.min',
+            'viz': '/static/visualize'
+        },
+        shim: {
+            'viz': {
+                exports: 'viz',
+                deps: ['d3']  // Depend on D3
+            }
+        }
+    });
+</script>
+
+<style>
+    /* Customizing the background and line number color */
+    .CodeMirror {
+        height: 62% !important;
+        border: 1px solid #ddd;
+        font-family: "Courier New", Courier, monospace;
+        box-sizing: border-box;
+        margin-bottom: 0.5vh !important;
+    }
+
+    .CodeMirror-scroll {
+        height: 100%;
+        max-height: 100%;
+        overflow-y: auto;
+    }
+
+    .CodeMirror-gutters {
+        background-color: #f5f5f5;
+        border-right: 1px solid #ddd;
+    }
+
+    .CodeMirror-linenumber {
+        color: gray;
+    }
+
+    body {
+        background-color: #f0f4ff;
+        font-family: 'Roboto', sans-serif;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .custom-center {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    /* Drop down queries */
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #f9f9f9;
+        min-width: 110px;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+        max-height: 30vh;
+        overflow-y: auto;
+    }
+
+    .dropdown-content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+    }
+
+    .dropdown-content a:hover {
+        background-color: #f1f1f1;
+    }
+
+    .dropdown-button:hover .dropdown-content {
+        display: block;
+    }
+
+    /* left/middle/right panel */
+    .query-container {
+        display: flex;
+        align-items: stretch;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .left-panel,
+    .middle-panel,
+    .right-panel {
+        flex: 1 1 30% !important;
+        width: 32% !important;
+        min-width: 31% !important;
+        max-width: 32% !important;
+        height: 42vh !important;
+        padding: 10px;
+        box-sizing: border-box;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .custom-center h1 {
+        padding: 0;
+        margin: 0px;
+    }
+
+    h1 {
+        color: #5a4fcf;
+        font-weight: 500;
+        margin: 10px 0;
+        padding: 0 !important;
+    }
+
+    .dropdown,
+    .selectivity-form {
+        flex-grow: 0;
+    }
+
+    /* selectivity form */
+    .interactive-area {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-height: 100% !important;
+    }
+
+    .interactive-area h3,
+    .right-panel .custom-center h3 {
+        color: #5a4fcf;
+        padding: 0;
+    }
+
+    h3 {
+        margin-bottom: 0px !important;
+    }
+
+    .input-group-container {
+        overflow-y: auto;
+        height: 60% !important;
+        margin-bottom: 10px;
+        margin-left: 10px;
+    }
+
+    .input-group {
+        margin-bottom: 10px;
+        align-items: center;
+        display: flex;
+    }
+
+    .input-group strong {
+        margin-right: 10px;
+        min-width: 150px;
+    }
+
+    .selectivity-input,
+    .placeholder-input {
+        border: 2px solid #ccc;
+        border-radius: 4px;
+        padding: 8px;
+        width: 150px;
+    }
+
+    .change-selectivity-btn,
+    .reset-selectivity-btn {
+        background: none;
+        border: none;
+        color: #5a4fcf;
+        cursor: pointer;
+        padding: 5px;
+        margin-left: 5px;
+    }
+
+    .change-selectivity-btn:hover,
+    .reset-selectivity-btn:hover {
+        color: white;
+    }
+
+
+    /* query form */
+    form.query-form {
+        display: flex;
+        flex-direction: column;
+        width: 90%;
+        height: 72%;
+        padding: 20px 20px 0px;
+    }
+
+    form.selectivity-form {
+        display: flex;
+        flex-direction: column;
+        max-width: 100%;
+        height: 100%;
+        padding-left: 10px;
+    }
+
+    .query-file-indicator {
+        margin-top: -10px;
+        margin-bottom: 10px;
+        color: #5a4fcf;
+        font-size: calc(1vh + 0.5vw);
+    }
+
+    textarea {
+        width: 100%;
+        padding: 10px;
+        border-radius: 4px;
+        border: 2px solid #ccc;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    button {
+        background-color: #4a67ee;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: calc(1vh + 0.7vw);
+        margin-top: 10px !important;
+    }
+
+    button:hover {
+        background-color: #3a4bab;
+    }
+
+    div.custom-center {
+        display: block;
+        text-align: center;
+        width: 100%;
+        font-size: calc(1vh + 0.7vw);
+    }
+
+    .loading-indicator {
+        text-align: center;
+        font-size: calc(1vh + 0.6vw);
+        color: #666;
+        padding: 20px;
+    }
+
+    /* template form */
+    .sql-display,
+    .placeholders-inputs {
+        overflow-y: auto;
+        width: 90%;
+        padding: 10px;
+        margin-bottom: 10px;
+        margin-left: 10px;
+        ;
+    }
+
+    /* Adjust textarea styling to be consistent with the input areas */
+    #sql_query {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    /* svg edge image */
+    .flex-container {
+        display: flex;
+        align-items: stretch;
+        height: 42vh;
+    }
+
+    #left-panel,
+    #right-panel {
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 10px;
+        padding-top: 0px !important;
+        box-sizing: border-box;
+        overflow: auto;
+        height: 100% !important;
+    }
+
+    .panel-content {
+        flex-grow: 1;
+        overflow: auto;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Resizer customization */
+    .resizer {
+        cursor: ew-resize;
+        background-color: #f0f4ff;
+        width: 8px;
+        height: 100%;
+        transition: background-color 0.25s ease-in-out;
+    }
+
+    .resizer:hover {
+        background-color: #ddd;
+    }
+
+    .edge-image-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: nowrap;
+        transition: all 0.5s ease;
+        max-width: 100%;
+    }
+
+    svg.main-svg {
+        height: 100% !important;
+        width: 100% !important;
+    }
+
+    /* latency list */
+    .scrollable-list {
+        overflow-x: auto;
+        width: 90% !important;
+        white-space: nowrap;
+        padding-left: 10px;
+        padding-right: 10px;
+        border-radius: 5px;
+        margin: 0px auto;
+    }
+
+    ul.cost-list,
+    ul.latency-list {
+        padding: 0;
+        list-style: none;
+        display: flex;
+    }
+
+    ul.cost-list li,
+    ul.latency-list li {
+        display: inline-block;
+        margin-right: 20px;
+        padding-left: 10px;
+        padding-right: 10px;
+        border-radius: 5px;
+    }
+
+    ul.cost-list li span,
+    ul.latency-list li span {
+        margin-right: 10px;
+        font-weight: normal;
+        color: #333;
+    }
+
+    .latency-list strong,
+    .cost-list strong {
+        display: block;
+        color: #5a4fcf;
+        margin-bottom: 5px;
+    }
+</style>
