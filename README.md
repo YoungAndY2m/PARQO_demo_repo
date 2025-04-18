@@ -6,7 +6,7 @@ HintQPT is based on our research work [PARQO](https://www.vldb.org/pvldb/vol17/p
 
 To see Hint-QPT in action, watch this [video](https://drive.google.com/file/d/118beHtnIVvdFgygvcrNKhD3mdb6EEoM9/view?usp=sharing).
 
-
+The full version paper is: [hint-qpt.pdf](https://github.com/YoungAndY2m/PARQO_demo_repo/blob/main/hint-qpt.pdf)
 
 
 ## Preparation
